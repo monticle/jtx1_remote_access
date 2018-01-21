@@ -57,34 +57,6 @@ make deb
 # sudo dpkg -i sudo dpkg -i virtualgl_2.5.2_arm64.deb
 cd ..
 
-# TURBOVNC
-
-# Build and install TurboVNC
-git clone https://github.com/TurboVNC/turbovnc.git
-
-mkdir turbovnc-build
-cd turbovnc-build
-cmake -G "Unix Makefiles" -DTVNC_BUILDJAVA=0 -DTJPEG_LIBRARY="-L/opt/libjpeg-turbo/lib64/ -lturbojpeg" ../turbovnc
-
-# Prevent error like #error "GLYPHPADBYTES must be 4",
-# edit ../turbovnc/unix/Xvnc/programs/Xserver/include/servermd.h
-# and prepend before "#ifdef __avr32__"
-servermd="$currentDir/turbovnc/unix/Xvnc/programs/Xserver/include/servermd.h"
-line="#ifdef __avr32__"
-defs="#ifdef __aarch64__\n\
-# define IMAGE_BYTE_ORDER       LSBFirst\n\
-# define BITMAP_BIT_ORDER       LSBFirst\n\
-# define GLYPHPADBYTES          4\n\
-#endif\n"
-sed -i "/$line/i $defs" "$servermd"
-make
-# Change "DEBARCH=aarch64" to "DEBARCH=arm64"
-sed -i 's/aarch64/arm64/g' pkgscripts/makedpkg
-# Change "Architecture: aarch64" to "Architecture: arm64"
-sed -i 's/aarch64/arm64/g' pkgscripts/deb-control
-make deb
-# sudo dpkg -i turbovnc_2.1.1_arm64.deb
-
 # SYSTEM
 
 # Add system-wide configurations
@@ -93,11 +65,6 @@ echo "/opt/libjpeg-turbo/lib64" > libjpeg-turbo.conf
 sudo cp libjpeg-turbo.conf /etc/ld.so.conf.d/
 sudo ldconfig
 rm ./libjpeg-turbo.conf
-
-# Add TurboVNC to path
-if ! grep -Fq "/opt/TurboVNC/bin" "$HOME/.bashrc"; then
-    echo 'export PATH=$PATH:/opt/TurboVNC/bin' >> ~/.bashrc
-fi
 
 # Add VirtualGL to path
 if ! grep -Fq "/opt/VirtualGL/bin" "$HOME/.bashrc"; then
